@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #09090f;
+  --color-surface: #130f21;
+  --color-line: #2a2142;
+  --color-body: #b9b2d0;
+  --color-bright: #f4f1ff;
+  --color-accent: #a78bfa;
+  --color-accent-strong: #7c3aed;
+}
+
+html {
+  background: var(--color-ink);
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-body);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 120px 90px, #c4b5fd, transparent),
+    radial-gradient(1.5px 1.5px at 170px 20px, #fff, transparent),
+    radial-gradient(60% 40% at 15% 0, rgb(124 58 237 / 0.25), transparent),
+    radial-gradient(50% 40% at 95% 35%, rgb(56 189 248 / 0.11), transparent);
+  background-size: 200px 130px, 200px 130px, 200px 130px, auto, auto;
+  background-repeat: repeat, repeat, repeat, no-repeat, no-repeat;
+}
