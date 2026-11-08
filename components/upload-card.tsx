@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { MAX_CHARS, generateWithAI, generateWithServer } from "../lib/ai";
+import type { CSSProperties } from "react";
+import { MAX_CHARS, MAX_QUESTIONS, MIN_QUESTIONS, clampCount, generateWithAI, generateWithServer } from "../lib/ai";
 import { buildQuestions } from "../lib/generate";
 import { readFile } from "../lib/read-file";
 import type { Question } from "../lib/types";
@@ -16,6 +17,7 @@ function formatSize(bytes: number) {
 }
 
 const FORMATS = ["PDF", "DOCX", "PPTX", "TXT", "MD"];
+const PRESETS = [5, 10, 25];
 
 export default function UploadCard({ onReady, ai }: { onReady: (items: Question[], title: string) => void; ai: AiSettings }) {
   const [file, setFile] = useState<File | null>(null);
@@ -24,7 +26,16 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ msg: string; error?: boolean }>({ msg: "" });
   const inputRef = useRef<HTMLInputElement>(null);
+  const [count, setCount] = useState(25);
+  const [custom, setCustom] = useState(false);
+  const [draft, setDraft] = useState("25");
   const { useAi, apiKey, remember, sharedAi, code, rememberCode, ownKey } = ai;
+
+  function setAmount(n: number) {
+    const v = clampCount(n);
+    setCount(v);
+    setDraft(String(v));
+  }
 
   function choose(next: File | undefined) {
     if (!next) return;
@@ -67,16 +78,16 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
         } catch {
           // Not being able to save is fine.
         }
-        setStatus({ msg: "Asking the AI to write your questions. This can take up to 30 seconds…" });
+        setStatus({ msg: `Asking the AI to write your questions. ${count > 25 ? "A big set can take up to a minute…" : "This can take up to 30 seconds…"}` });
         try {
-          const items = viaOwnKey ? await generateWithAI(content, key) : await generateWithServer(content, accessCode);
+          const items = (viaOwnKey ? await generateWithAI(content, key, count) : await generateWithServer(content, accessCode, count)).slice(0, count);
           setStatus({
             msg: `Made ${items.length} questions with AI.${content.length > MAX_CHARS ? " Only the first part of a long file was used." : ""}`,
           });
           onReady(items, title);
         } catch (error) {
           const reason = error instanceof Error ? error.message : "Something went wrong.";
-          const fallback = buildQuestions(content);
+          const fallback = buildQuestions(content, count);
           if (fallback.items.length === 0) {
             setStatus({ msg: reason, error: true });
           } else {
@@ -95,13 +106,13 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
         return;
       }
 
-      const result = buildQuestions(content);
+      const result = buildQuestions(content, count);
       if (result.items.length === 0) {
         setStatus({ msg: "I couldn’t find enough to ask about. Notes with definitions (“Router: forwards packets”) or with names, dates, and numbers work best.", error: true });
         return;
       }
       setStatus({
-        msg: `Read ${result.words.toLocaleString("en-US")} words, found ${result.defs} definitions, made ${result.items.length} questions.`,
+        msg: `Read ${result.words.toLocaleString("en-US")} words, found ${result.defs} definitions, made ${result.items.length} questions${result.items.length < count ? ` (you asked for ${count}, but your notes only had enough for ${result.items.length})` : ""}.`,
       });
       onReady(result.items, title);
     } catch (error) {
@@ -201,6 +212,72 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
           />
           <p className="mt-2 text-right text-xs tabular-nums">{text.length.toLocaleString("en-US")} characters</p>
         </div>
+      </div>
+
+      {/* How many questions */}
+      <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <div>
+          <p className="font-semibold text-bright">How many questions?</p>
+          <p className="text-sm">Up to {MAX_QUESTIONS}. Short notes may make fewer.</p>
+        </div>
+        <div role="group" aria-label="Number of questions" className="relative grid w-full max-w-sm grid-cols-4 rounded-full border border-line bg-ink/60 p-1 sm:ml-auto">
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-accent-strong shadow-glow transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            style={{ transform: `translateX(${(custom ? PRESETS.length : Math.max(0, PRESETS.indexOf(count))) * 100}%)` }}
+          />
+          {PRESETS.map((n) => (
+            <button
+              key={n}
+              type="button"
+              aria-pressed={!custom && count === n}
+              onClick={() => {
+                setCustom(false);
+                setAmount(n);
+              }}
+              className={`relative z-10 cursor-pointer rounded-full py-2 text-sm font-medium tabular-nums transition-colors duration-300 ${!custom && count === n ? "text-white" : "text-bright/80 hover:text-white"}`}
+            >
+              {n}
+            </button>
+          ))}
+          <button
+            type="button"
+            aria-pressed={custom}
+            onClick={() => setCustom(true)}
+            className={`relative z-10 cursor-pointer rounded-full py-2 text-sm font-medium transition-colors duration-300 ${custom ? "text-white" : "text-bright/80 hover:text-white"}`}
+          >
+            Custom
+          </button>
+        </div>
+        {custom && (
+          <div className="rise flex w-full items-center gap-4">
+            <input
+              type="range"
+              min={MIN_QUESTIONS}
+              max={MAX_QUESTIONS}
+              value={count}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              aria-label="Number of questions"
+              className="slider flex-1"
+              style={{ "--pct": `${((count - MIN_QUESTIONS) / (MAX_QUESTIONS - MIN_QUESTIONS)) * 100}%` } as CSSProperties}
+            />
+            <input
+              type="number"
+              inputMode="numeric"
+              min={MIN_QUESTIONS}
+              max={MAX_QUESTIONS}
+              value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value);
+                const n = parseInt(e.target.value, 10);
+                if (!Number.isNaN(n)) setCount(clampCount(n));
+              }}
+              onBlur={() => setDraft(String(count))}
+              aria-label="Number of questions, 1 to 50"
+              className="w-20 rounded-lg border border-line bg-ink/60 px-3 py-2 text-center text-bright tabular-nums transition-all focus:border-accent focus:shadow-glow focus:outline-none"
+            />
+          </div>
+        )}
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line/70 pt-5">

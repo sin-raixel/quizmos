@@ -11,6 +11,7 @@ Turn your notes into a study reviewer. Upload a PDF, Word, PowerPoint, or text f
 - Free method: multiple choice with an explanation quoted from your notes
 - AI mode adds true or false, select-all-that-apply, and enumeration (type the list from memory) questions
 - Flashcards that flip in 3D; shuffle and step through (arrow keys work)
+- Choose how many questions: 5, 10, 25, or a custom amount from 1 to 50
 - Edit mode to remove questions that came out wrong
 - History: every reviewer you make is saved in your browser (questions only, not your file), so you can reopen it later. Back up / Restore moves them to another device
 - Private by default: files are read on your device and never uploaded (unless you turn on AI)

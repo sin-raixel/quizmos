@@ -5,6 +5,7 @@ import { AiMenu, useAiSettings } from "../components/ai-settings";
 import Editor from "../components/editor";
 import Flashcards from "../components/flashcards";
 import History from "../components/history";
+import Logo from "../components/logo";
 import Quiz from "../components/quiz";
 import UploadCard from "../components/upload-card";
 import { card } from "../components/ui";
@@ -91,19 +92,9 @@ export default function Home() {
     <>
       <header className="sticky top-0 z-30 border-b border-line/60 bg-ink/55 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
-          <div className="group flex items-center gap-3">
-            <svg viewBox="0 0 32 32" aria-hidden="true" className="size-8 transition-transform duration-700 group-hover:rotate-[360deg]">
-              <defs>
-                <radialGradient id="planet" cx="35%" cy="35%" r="75%">
-                  <stop offset="0" stopColor="#c4b5fd" />
-                  <stop offset="1" stopColor="#6d28d9" />
-                </radialGradient>
-              </defs>
-              <circle cx="16" cy="16" r="6.5" fill="url(#planet)" />
-              <ellipse cx="16" cy="16" rx="14" ry="5.5" fill="none" stroke="#a78bfa" strokeWidth="1.4" transform="rotate(-24 16 16)" />
-              <circle cx="27" cy="9.5" r="2" fill="#7dd3fc" />
-            </svg>
-            <span className="text-lg font-semibold text-bright">Quizmos</span>
+          <div className="logo flex cursor-default items-center gap-3">
+            <Logo className="size-11" />
+            <span className="text-xl font-semibold tracking-tight text-bright">Quizmos</span>
           </div>
           <AiMenu ai={ai} />
         </div>

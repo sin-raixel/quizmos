@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <radialGradient id="qz-planet" cx="34%" cy="28%" r="80%">
+      <stop offset="0" stop-color="#ddd6fe"/><stop offset="0.45" stop-color="#8b5cf6"/><stop offset="1" stop-color="#4c1d95"/>
+    </radialGradient>
+    <linearGradient id="qz-ring" x1="3" y1="32" x2="61" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7dd3fc"/><stop offset="0.5" stop-color="#a78bfa"/><stop offset="1" stop-color="#7dd3fc"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#07060f"/>
+  <g transform="translate(3.2 3.2) scale(0.9)"><g class="qz-mark">
+    <path class="qz-ring-back" transform="rotate(-24 32 32)" d="M3.5 32A28.5 8.5 0 0 1 60.5 32" fill="none" stroke="url(#qz-ring)" stroke-width="3.4" stroke-linecap="round"/>
+    <circle class="qz-planet" cx="32" cy="32" r="17.5" fill="url(#qz-planet)"/>
+    <g transform="translate(32 28) scale(0.88) translate(-32 -28) translate(0 -4)" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M26.6 28.4c0-3.2 2.4-5.2 5.5-5.2 3 0 5.3 1.9 5.3 4.7 0 3.7-5.3 4.1-5.3 7.8" stroke-width="3.6"/>
+      <circle cx="32.1" cy="40.4" r="2.1" fill="#fff" stroke="none"/>
+    </g>
+    <path class="qz-ring-front" transform="rotate(-24 32 32)" d="M3.5 32A28.5 8.5 0 0 0 60.5 32" fill="none" stroke="url(#qz-ring)" stroke-width="3.4" stroke-linecap="round"/>
+  </g></g>
+</svg>

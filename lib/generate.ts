@@ -51,7 +51,7 @@ const isComplete = (raw: string) => {
   );
 };
 
-export function buildQuestions(text: string) {
+export function buildQuestions(text: string, count = 25) {
   // Lines that wrap mid-sentence (common in PDFs) are joined back together.
   const clean = text.replace(/\r/g, "").replace(/[ \t]+/g, " ").replace(/([^\n.!?:;])\n(?=[a-z(,])/g, "$1 ");
   const sentences = clean
@@ -209,7 +209,7 @@ export function buildQuestions(text: string) {
   }
 
   return {
-    items: shuffle(items).slice(0, 25),
+    items: shuffle(items).slice(0, count),
     words: clean.split(/\s+/).length,
     defs: defs.length,
   };

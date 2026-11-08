@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { MAX_CHARS, MODELS, PROMPT } from "../../../lib/ai";
+import { MAX_CHARS, MODELS, clampCount, outputTokens, promptFor } from "../../../lib/ai";
 
 // The owner's Gemini key lives ONLY here, as an environment variable. It is never sent to the browser.
 //   GEMINI_API_KEY        required: your key from aistudio.google.com/apikey
@@ -70,7 +70,7 @@ export async function GET() {
 export async function POST(req: Request) {
   if (!configured()) return json({ error: "Shared AI isn’t set up on this site yet." }, 503);
 
-  let payload: { notes?: unknown; code?: unknown };
+  let payload: { notes?: unknown; code?: unknown; count?: unknown };
   try {
     payload = await req.json();
   } catch {
@@ -83,6 +83,7 @@ export async function POST(req: Request) {
     return json({ error: "There isn’t enough text to make questions from." }, 400);
   }
   const notes = payload.notes.slice(0, MAX_CHARS); // enforced here too: client limits can be bypassed
+  const count = clampCount(Number(payload.count)); // 1 to 50, also enforced here
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
   if (!(await underLimit(ip))) {
@@ -97,8 +98,8 @@ export async function POST(req: Request) {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY! },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: PROMPT + notes }] }],
-          generationConfig: { responseMimeType: "application/json", temperature: 0.4, maxOutputTokens: 8192 },
+          contents: [{ parts: [{ text: promptFor(count) + notes }] }],
+          generationConfig: { responseMimeType: "application/json", temperature: 0.4, maxOutputTokens: outputTokens(count) },
         }),
       });
     } catch {

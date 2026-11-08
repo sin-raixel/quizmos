@@ -9,15 +9,32 @@ import type { Question } from "./types";
 export const MODELS = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash-lite"];
 export const MAX_CHARS = 30000; // keeps requests small enough for free-tier limits
 
-export const PROMPT = `You are a teacher writing a study reviewer from a student's notes.
-Write about 20 questions that test understanding of the notes below, mixing these types:
-- "mcq": multiple choice (about 10)
-- "tf": true or false (about 4)
-- "multi": select all that apply (about 3)
-- "enum": enumeration, where the student lists items from memory (about 3)
+export const MIN_QUESTIONS = 1;
+export const MAX_QUESTIONS = 50;
+export const clampCount = (n: number) => Math.min(MAX_QUESTIONS, Math.max(MIN_QUESTIONS, Math.round(n) || 25));
+// Room for the answer: each question with its flashcard text needs a few hundred tokens.
+export const outputTokens = (count: number) => Math.max(4096, count * 400);
+
+export function promptFor(count: number): string {
+  const mcq = Math.round(count * 0.5);
+  const tf = Math.round(count * 0.2);
+  const multi = Math.round(count * 0.15);
+  const mix = [
+    ['"mcq": multiple choice', mcq],
+    ['"tf": true or false', tf],
+    ['"multi": select all that apply', multi],
+    ['"enum": enumeration, where the student lists items from memory', Math.max(0, count - mcq - tf - multi)],
+  ]
+    .filter(([, n]) => Number(n) > 0)
+    .map(([label, n]) => `- ${label} (${n})`)
+    .join("\n");
+
+  return `You are a teacher writing a study reviewer from a student's notes.
+Write ${count} question${count === 1 ? " that tests" : "s that test"} understanding of the notes below, mixing these types:
+${mix}
 
 Rules:
-- Use only facts found in the notes. Do not invent anything. If the notes are short, write fewer questions, and skip a type the notes can't support.
+- Use only facts found in the notes. Do not invent anything. If the notes are too short for ${count}, write fewer questions, and skip a type the notes can't support.
 - Ask about ideas, causes, effects, comparisons, and key terms, not trivia.
 - Never write "according to the notes" in a question.
 - "explanation" is one or two sentences on why the answer is right, based on the notes.
@@ -35,6 +52,7 @@ Return ONLY a JSON array. Use these shapes:
 
 NOTES:
 `;
+}
 
 type Raw = {
   type?: unknown;
@@ -126,7 +144,7 @@ function parse(raw: string): Question[] {
   return out;
 }
 
-export async function generateWithAI(notes: string, apiKey: string): Promise<Question[]> {
+export async function generateWithAI(notes: string, apiKey: string, count = 25): Promise<Question[]> {
   const text = notes.slice(0, MAX_CHARS);
   let problem = "";
 
@@ -137,8 +155,8 @@ export async function generateWithAI(notes: string, apiKey: string): Promise<Que
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: PROMPT + text }] }],
-          generationConfig: { responseMimeType: "application/json", temperature: 0.4, maxOutputTokens: 8192 },
+          contents: [{ parts: [{ text: promptFor(clampCount(count)) + text }] }],
+          generationConfig: { responseMimeType: "application/json", temperature: 0.4, maxOutputTokens: outputTokens(clampCount(count)) },
         }),
       });
     } catch {
@@ -184,13 +202,13 @@ export async function serverAiAvailable(): Promise<boolean> {
 }
 
 // Ask the site's own server (which holds the owner's key) to write the questions.
-export async function generateWithServer(notes: string, code: string): Promise<Question[]> {
+export async function generateWithServer(notes: string, code: string, count = 25): Promise<Question[]> {
   let res: Response;
   try {
     res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes: notes.slice(0, MAX_CHARS), code }),
+      body: JSON.stringify({ notes: notes.slice(0, MAX_CHARS), code, count: clampCount(count) }),
     });
   } catch {
     throw new Error("Couldn’t reach the server. Check your internet connection.");
