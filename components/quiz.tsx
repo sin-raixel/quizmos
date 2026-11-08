@@ -13,14 +13,14 @@ const OPTION_STYLE = {
   on: "spot border-accent bg-accent/15 text-bright shadow-glow",
   ok: "border-emerald-400 bg-emerald-400/10 text-bright",
   bad: "border-rose-400 bg-rose-400/10 text-bright",
-  missed: "border-dashed border-amber-300 bg-amber-300/10 text-bright",
+  missed: "border-dashed border-nova bg-nova/10 text-bright",
   dim: "border-line text-body opacity-50",
 } as const;
 type OptionState = keyof typeof OPTION_STYLE;
 
 function Badge({ children, square, state }: { children: React.ReactNode; square?: boolean; state: OptionState }) {
   const tone =
-    state === "ok" ? "border-emerald-400 text-emerald-300" : state === "bad" ? "border-rose-400 text-rose-300" : state === "missed" ? "border-amber-300 text-amber-200" : state === "on" ? "border-accent bg-accent text-ink" : "border-line text-accent";
+    state === "ok" ? "border-emerald-400 text-emerald-300" : state === "bad" ? "border-rose-400 text-rose-300" : state === "missed" ? "border-nova text-nova" : state === "on" ? "border-accent bg-accent text-ink" : "border-line text-accent";
   return (
     <span className={`grid size-7 shrink-0 place-items-center border text-xs font-semibold transition-colors ${square ? "rounded-md" : "rounded-full"} ${tone}`}>{children}</span>
   );

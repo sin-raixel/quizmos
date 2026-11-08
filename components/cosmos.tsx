@@ -39,13 +39,14 @@ export default function Cosmos() {
     let frame = 0;
 
     const onMove = (e: PointerEvent) => {
-      // 1. Cursor light inside anything marked .spot.
+      // 1. Cursor light inside anything marked .spot (nested ones all follow the cursor).
       if (e.target instanceof Element) {
-        const spot = e.target.closest<HTMLElement>(".spot");
-        if (spot) {
+        let spot = e.target.closest<HTMLElement>(".spot");
+        while (spot) {
           const box = spot.getBoundingClientRect();
           spot.style.setProperty("--mx", `${e.clientX - box.left}px`);
           spot.style.setProperty("--my", `${e.clientY - box.top}px`);
+          spot = spot.parentElement?.closest<HTMLElement>(".spot") ?? null;
         }
       }
       // 2. The stars drift a little against the cursor, nearer stars more.

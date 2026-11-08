@@ -133,6 +133,17 @@ body {
   }
 }
 
+@property --ang {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes spin-angle {
+  to {
+    --ang: 360deg;
+  }
+}
+
 /* ---------- shared pieces ---------- */
 
 @layer components {
@@ -194,6 +205,10 @@ body {
   .btn-primary:hover:not(:disabled)::after {
     transform: translateX(120%);
   }
+  .btn-primary:active:not(:disabled),
+  .btn-ghost:active {
+    transform: scale(0.96);
+  }
   .btn-primary:disabled {
     cursor: not-allowed;
     opacity: 0.55;
@@ -237,11 +252,99 @@ body {
     transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .hero-title {
-    background: linear-gradient(180deg, #fff 35%, #c4b5fd);
-    -webkit-background-clip: text;
-    background-clip: text;
+  /* Hollow headline line: outlined, fills in softly when you point at it. */
+  .outline-text {
     color: transparent;
+    -webkit-text-stroke: 1.5px rgb(196 181 253 / 0.95);
+    paint-order: stroke fill;
+    transition:
+      color 0.5s,
+      text-shadow 0.5s;
+  }
+  .hero:hover .outline-text {
+    color: rgb(167 139 250 / 0.22);
+    text-shadow: 0 0 40px rgb(124 58 237 / 0.7);
+  }
+
+  /* Cursor-lit edge: a thin ring of light that follows the pointer around the border. */
+  .edge::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgb(167 139 250 / 0.95), transparent 65%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .edge:hover::after {
+    opacity: 1;
+  }
+
+  /* Dropzone: a comet circles the border on hover or while dragging a file over it. */
+  .dz::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    pointer-events: none;
+    background: conic-gradient(from var(--ang), transparent 0 55%, rgb(124 58 237) 72%, rgb(167 139 250) 85%, rgb(125 211 252) 95%, transparent);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.35s;
+    animation: spin-angle 3.2s linear infinite;
+  }
+  .dz:hover::after,
+  .dz[data-over="true"]::after {
+    opacity: 1;
+  }
+
+  /* The key menu in the top bar: opens on hover or focus, or when pinned by a click. */
+  .menu-panel {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+    transform-origin: top right;
+    transition:
+      opacity 0.2s,
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0.2s;
+  }
+  .menu:focus-within .menu-panel,
+  .menu[data-open="true"] .menu-panel {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+  }
+  @media (hover: hover) {
+    .menu:hover .menu-panel {
+      visibility: visible;
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .menu-icon {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .menu:hover .menu-icon,
+  .menu[data-open="true"] .menu-icon {
+    transform: rotate(-35deg) scale(1.15);
+  }
+
+  .thin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(167 139 250 / 0.4) transparent;
   }
 
   .rise {

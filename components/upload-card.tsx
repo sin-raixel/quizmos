@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { MAX_CHARS, generateWithAI, generateWithServer, serverAiAvailable } from "../lib/ai";
+import { useRef, useState } from "react";
+import { MAX_CHARS, generateWithAI, generateWithServer } from "../lib/ai";
 import { buildQuestions } from "../lib/generate";
 import { readFile } from "../lib/read-file";
 import type { Question } from "../lib/types";
+import { CODE_NAME, KEY_NAME } from "./ai-settings";
+import type { AiSettings } from "./ai-settings";
 import { card, primaryBtn } from "./ui";
-
-const KEY_NAME = "reviewer-maker-gemini-key";
-const CODE_NAME = "reviewer-maker-access-code";
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -16,41 +15,16 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export default function UploadCard({ onReady }: { onReady: (items: Question[], title: string) => void }) {
+const FORMATS = ["PDF", "DOCX", "PPTX", "TXT", "MD"];
+
+export default function UploadCard({ onReady, ai }: { onReady: (items: Question[], title: string) => void; ai: AiSettings }) {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ msg: string; error?: boolean }>({ msg: "" });
-  const [useAi, setUseAi] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [remember, setRemember] = useState(false);
-  const [sharedAi, setSharedAi] = useState(false); // does the site owner offer shared AI?
-  const [code, setCode] = useState("");
-  const [rememberCode, setRememberCode] = useState(true);
-  const [ownKey, setOwnKey] = useState(false); // "advanced": use my own key instead of the access code
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Bring back a key the visitor chose to remember on this device.
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(KEY_NAME);
-      if (saved) {
-        setApiKey(saved);
-        setRemember(true);
-        setUseAi(true);
-        setOwnKey(true);
-      }
-      const savedCode = localStorage.getItem(CODE_NAME);
-      if (savedCode) {
-        setCode(savedCode);
-        setUseAi(true);
-      }
-    } catch {
-      // Storage can be blocked in private windows. Nothing to do.
-    }
-    serverAiAvailable().then(setSharedAi);
-  }, []);
+  const { useAi, apiKey, remember, sharedAi, code, rememberCode, ownKey } = ai;
 
   function choose(next: File | undefined) {
     if (!next) return;
@@ -114,7 +88,10 @@ export default function UploadCard({ onReady }: { onReady: (items: Question[], t
       }
 
       if (useAi) {
-        setStatus({ msg: sharedAi && !ownKey ? "Enter the access code to use AI, or untick the AI box to use the free method." : "Paste a Gemini key to use AI, or untick the AI box to use the free method.", error: true });
+        setStatus({
+          msg: sharedAi && !ownKey ? "Add the access code in the key menu (top right) to use AI, or turn AI off to use the free method." : "Add a Gemini key in the key menu (top right) to use AI, or turn AI off to use the free method.",
+          error: true,
+        });
         return;
       }
 
@@ -136,148 +113,108 @@ export default function UploadCard({ onReady }: { onReady: (items: Question[], t
   }
 
   return (
-    <section className={`${card} mt-8`}>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setOver(true);
-          }}
-          onDragLeave={() => setOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setOver(false);
-            choose(e.dataTransfer.files[0]);
-          }}
-          className={`spot w-full cursor-pointer rounded-xl border-2 px-4 py-8 text-center transition-all duration-300 hover:border-accent hover:bg-accent/5 ${
-            over ? "border-dashed border-accent bg-accent/10" : file ? "border-solid border-accent/60 bg-accent/5" : "border-dashed border-line"
-          }`}
-        >
-          {file ? (
-            <>
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="mx-auto mb-2 size-8 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" />
-                <path d="M14 3v5h5M9 14.5l2 2 4-4" />
-              </svg>
-              <span className="mx-auto block max-w-full truncate px-8 font-semibold text-bright">{file.name}</span>
-              <span className="mt-1 block text-sm">
-                {formatSize(file.size)} · ready to use
-              </span>
-              <span className="mt-2 block text-sm text-accent">Click or drop another file to replace it</span>
-            </>
-          ) : (
-            <>
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="mx-auto mb-2 size-8 text-accent" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
-              </svg>
-              <span className="font-semibold text-bright">Drop a file here</span> or click to choose
-              <span className="mt-1 block text-sm">PDF, DOCX, PPTX, TXT, or MD</span>
-            </>
-          )}
-        </button>
-        {file && (
+    <section className={card} aria-labelledby="make-title">
+      <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="make-title" className="text-xl font-semibold text-bright">
+          Add your notes
+        </h2>
+        <p className="text-sm">Files are read on your device and never uploaded.</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Left pane: the file */}
+        <div className="relative">
           <button
             type="button"
-            aria-label={`Remove ${file.name}`}
-            onClick={() => {
-              setFile(null);
-              setStatus({ msg: "" });
-              if (inputRef.current) inputRef.current.value = ""; // so choosing the same file again still works
+            data-over={over}
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setOver(true);
             }}
-            className="absolute top-3 right-3 grid size-8 cursor-pointer place-items-center rounded-full border border-line bg-ink/70 text-bright transition-colors hover:border-rose-400 hover:bg-rose-400/10 hover:text-rose-400"
+            onDragLeave={() => setOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setOver(false);
+              choose(e.dataTransfer.files[0]);
+            }}
+            className={`dz spot group relative flex h-full min-h-72 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 px-6 py-8 text-center transition-all duration-300 hover:bg-accent/5 data-[over=true]:scale-[1.015] ${
+              over ? "border-dashed border-accent bg-accent/10" : file ? "border-solid border-accent/60 bg-accent/5" : "border-dashed border-line hover:border-accent/50"
+            }`}
           >
-            ✕
+            {file ? (
+              <span key={file.name} className="rise flex w-full flex-col items-center">
+                <span className="mb-3 grid size-14 place-items-center rounded-2xl border border-emerald-400/40 bg-emerald-400/10 text-emerald-400 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" />
+                    <path d="M14 3v5h5M9 14.5l2 2 4-4" />
+                  </svg>
+                </span>
+                <span className="block max-w-full truncate px-6 font-semibold text-bright">{file.name}</span>
+                <span className="mt-1 block text-sm">{formatSize(file.size)}, ready to use</span>
+                <span className="mt-3 block text-sm text-accent">Click or drop another file to replace it</span>
+              </span>
+            ) : (
+              <>
+                <span className="mb-4 grid size-16 place-items-center rounded-2xl border border-accent/30 bg-accent/10 text-accent transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-accent group-hover:shadow-glow group-data-[over=true]:-translate-y-2.5">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="size-8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+                  </svg>
+                </span>
+                <span className="text-lg font-semibold text-bright">{over ? "Let go to add it" : "Drop a file here"}</span>
+                <span className="mt-1 block text-sm">or click to browse</span>
+                <span className="mt-4 flex flex-wrap justify-center gap-1.5">
+                  {FORMATS.map((f) => (
+                    <span key={f} className="chip transition-transform duration-200 group-hover:-translate-y-0.5">
+                      {f}
+                    </span>
+                  ))}
+                </span>
+              </>
+            )}
           </button>
-        )}
-      </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".pdf,.docx,.pptx,.txt,.md"
-        className="hidden"
-        onChange={(e) => choose(e.target.files?.[0])}
-      />
+          {file && (
+            <button
+              type="button"
+              aria-label={`Remove ${file.name}`}
+              onClick={() => {
+                setFile(null);
+                setStatus({ msg: "" });
+                if (inputRef.current) inputRef.current.value = ""; // so choosing the same file again still works
+              }}
+              className="absolute top-3 right-3 grid size-8 cursor-pointer place-items-center rounded-full border border-line bg-ink/70 text-bright transition-all duration-200 hover:rotate-90 hover:border-rose-400 hover:bg-rose-400/10 hover:text-rose-400"
+            >
+              ✕
+            </button>
+          )}
+          <input ref={inputRef} type="file" accept=".pdf,.docx,.pptx,.txt,.md" className="hidden" onChange={(e) => choose(e.target.files?.[0])} />
+        </div>
 
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder="Or paste your notes here…"
-        aria-label="Paste your notes"
-        className="mt-4 min-h-28 w-full resize-y rounded-lg border border-line bg-ink p-3 text-bright focus:outline-2 focus:outline-accent"
-      />
-
-      <div className="mt-4 rounded-lg border border-line p-4">
-        <label className="flex cursor-pointer items-center gap-2 font-medium text-bright">
-          <input type="checkbox" checked={useAi} onChange={(e) => setUseAi(e.target.checked)} className="size-4 accent-accent-strong" />
-          {sharedAi ? "Smarter questions with AI (needs an access code)" : "Smarter questions with AI (optional, free with your own key)"}
-        </label>
-        <p className="mt-1 pl-6 text-sm">Adds true or false, select-all, and enumeration questions.</p>
-        {useAi && (
-          <div className="mt-4 space-y-3 text-sm">
-            {sharedAi && !ownKey && (
-              <>
-                <input
-                  type="password"
-                  autoComplete="off"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Access code (ask whoever shared this site)"
-                  aria-label="Access code"
-                  className="w-full rounded-lg border border-line bg-ink p-3 text-bright focus:outline-2 focus:outline-accent"
-                />
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input type="checkbox" checked={rememberCode} onChange={(e) => setRememberCode(e.target.checked)} className="size-4 accent-accent-strong" />
-                  Remember the code on this device
-                </label>
-              </>
-            )}
-
-            {(ownKey || !sharedAi) && (
-              <>
-                <input
-                  type="password"
-                  autoComplete="off"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Paste your Gemini API key"
-                  aria-label="Gemini API key"
-                  className="w-full rounded-lg border border-line bg-ink p-3 text-bright focus:outline-2 focus:outline-accent"
-                />
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="size-4 accent-accent-strong" />
-                  Remember my key on this device
-                </label>
-                <p>
-                  Get a free key at{" "}
-                  <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-accent underline">
-                    aistudio.google.com/apikey
-                  </a>
-                  . It stays in your browser and is only sent to Google.
-                </p>
-              </>
-            )}
-
-            {sharedAi && (
-              <button type="button" onClick={() => setOwnKey((v) => !v)} className="cursor-pointer text-accent underline">
-                {ownKey ? "Use the access code instead" : "Advanced: use my own Gemini key instead"}
-              </button>
-            )}
-
-            <p className="text-amber-300">
-              {sharedAi && !ownKey
-                ? "With AI on, your notes are sent through this site’s server to Google. On the free tier Google may use them to improve its products, so don’t upload private or sensitive material."
-                : "With AI on, your notes are sent to Google. On the free tier Google may use them to improve its products, so don’t upload private or sensitive material."}
-            </p>
-          </div>
-        )}
+        {/* Right pane: pasted notes */}
+        <div className="flex flex-col">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Or paste your notes here…"
+            aria-label="Paste your notes"
+            className="min-h-72 w-full flex-1 resize-none rounded-xl border border-line bg-ink/60 p-4 text-bright transition-all duration-300 placeholder:text-body/60 hover:border-accent/50 focus:border-accent focus:shadow-glow focus:outline-none"
+          />
+          <p className="mt-2 text-right text-xs tabular-nums">{text.length.toLocaleString("en-US")} characters</p>
+        </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-        <p role="status" className={`max-w-md text-sm ${status.error ? "text-rose-400" : ""}`}>
+      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line/70 pt-5">
+        <p role="status" className={`min-w-0 flex-1 basis-60 text-sm ${status.error ? "text-rose-400" : ""}`}>
           {status.msg}
         </p>
+        <span className="chip inline-flex items-center gap-1.5" title="Change this with the key icon in the top bar">
+          {useAi && (
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5" fill="currentColor">
+              <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
+            </svg>
+          )}
+          {useAi ? "AI questions on" : "Free method"}
+        </span>
         <button type="button" onClick={generate} disabled={busy} className={primaryBtn}>
           {busy ? "Working…" : "Make my reviewer"}
         </button>

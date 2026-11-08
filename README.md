@@ -1,4 +1,4 @@
-# Reviewer Maker
+# Quizmos
 
 Turn your notes into a study reviewer. Upload a PDF, Word, PowerPoint, or text file (or paste your notes) and get a quiz and flashcards, all generated in your browser.
 
@@ -27,7 +27,7 @@ Text is pulled out of files in `lib/read-file.ts` using pdf.js, mammoth, and JSZ
 
 ## Optional AI mode
 
-Tick "Smarter questions with AI". There are two ways it can work:
+Click the key icon in the top bar (it opens on hover) and switch on "Smarter questions with AI". There are two ways it can work:
 
 1. **Shared key (best for friends).** You, the site owner, keep your Gemini key on the server. Friends only type the access code you give them; no API keys, no accounts. Their notes go browser → your server → Google.
 2. **Bring your own key (advanced).** Anyone can instead paste their own free Gemini key from Google AI Studio. That key stays in their browser and is sent only to Google. This is also what the site falls back to if you haven't set up the shared key.
@@ -56,7 +56,7 @@ Never prefix these variables with `NEXT_PUBLIC_` and never commit them. Everyone
 
 ```
 app/          page, layout, and the /api/generate server route
-components/   upload card, quiz, flashcards, question editor
+components/   upload card, AI key menu, history, quiz, flashcards, question editor
 lib/          file reading and question generation
 ```
 

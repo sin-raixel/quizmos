@@ -49,7 +49,7 @@ export function downloadBackup(list: Saved[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `reviewer-maker-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `quizmos-backup-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -59,9 +59,9 @@ export function parseBackup(text: string): Saved[] {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error("That isn’t a Reviewer Maker backup.");
+    throw new Error("That isn’t a Quizmos backup.");
   }
-  if (!Array.isArray(data)) throw new Error("That isn’t a Reviewer Maker backup.");
+  if (!Array.isArray(data)) throw new Error("That isn’t a Quizmos backup.");
   const good = data.filter(valid);
   if (good.length === 0) throw new Error("No reviewers were found in that file.");
   return good;

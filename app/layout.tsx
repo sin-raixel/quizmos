@@ -11,7 +11,7 @@ const font = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Reviewer Maker",
+  title: "Quizmos: turn your notes into a quiz",
   description: "Turn your notes into a quiz and flashcards. Files are read in your browser and never uploaded.",
 };
 
