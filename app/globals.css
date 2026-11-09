@@ -287,29 +287,6 @@ body {
     opacity: 1;
   }
 
-  /* Dropzone: a comet circles the border on hover or while dragging a file over it. */
-  .dz::after {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    padding: 2px;
-    pointer-events: none;
-    background: conic-gradient(from var(--ang), transparent 0 55%, rgb(124 58 237) 72%, rgb(167 139 250) 85%, rgb(125 211 252) 95%, transparent);
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.35s;
-    animation: spin-angle 3.2s linear infinite;
-  }
-  .dz:hover::after,
-  .dz[data-over="true"]::after {
-    opacity: 1;
-  }
-
   /* The key menu in the top bar: opens on hover or focus, or when pinned by a click. */
   .menu-panel {
     visibility: hidden;
@@ -456,47 +433,33 @@ body {
   transform: scale(1.32);
 }
 
-/* ---------- scrollbars: a dark track with a violet-to-sky comet for a thumb ---------- */
+/* ---------- scrollbars: slim and quiet ---------- */
 
 ::-webkit-scrollbar {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: rgb(7 6 15 / 0.7);
-  border-left: 1px solid rgb(167 139 250 / 0.12);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  min-height: 48px;
   border: 3px solid transparent;
   border-radius: 9999px;
-  background: linear-gradient(180deg, #7c3aed 0%, #6366f1 55%, #7dd3fc 100%) padding-box;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18);
+  background: rgb(167 139 250 / 0.28) padding-box;
+  transition: background 0.2s;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #a78bfa 0%, #818cf8 55%, #bae6fd 100%) padding-box;
-}
-::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(180deg, #c4b5fd 0%, #a5b4fc 55%, #e0f2fe 100%) padding-box;
+  background: rgb(167 139 250 / 0.6) padding-box;
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
-}
-
-/* Slimmer version inside panels like "Your reviewers" */
-.thin-scroll::-webkit-scrollbar {
-  width: 10px;
-}
-.thin-scroll::-webkit-scrollbar-track {
-  background: transparent;
-  border-left: 0;
 }
 
 /* Firefox (and anything else without the WebKit pieces) */
 @supports not selector(::-webkit-scrollbar) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: #7c3aed rgb(7 6 15 / 0.7);
+    scrollbar-color: rgb(167 139 250 / 0.4) transparent;
   }
 }
 
@@ -561,5 +524,63 @@ body {
     display: block;
     color: #000;
     font-family: system-ui, sans-serif;
+  }
+}
+
+/* Twinkling stars: each one flickers on its own rhythm (positions are drawn in components/cosmos.tsx). */
+.twinkler {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.85;
+  animation: twinkle-star 3s ease-in-out infinite;
+}
+@keyframes twinkle-star {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+/* A few four-pointed sparkles that swell and turn as they shine. */
+.sparkle {
+  position: absolute;
+  translate: -50% -50%;
+  opacity: 0.7;
+  animation: sparkle 4.5s ease-in-out infinite;
+}
+.sparkle::before,
+.sparkle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 0 8px 1px rgb(196 181 253 / 0.9);
+}
+.sparkle::before {
+  width: 1.5px;
+  height: 100%;
+  transform: translate(-50%, -50%);
+}
+.sparkle::after {
+  width: 100%;
+  height: 1.5px;
+  transform: translate(-50%, -50%);
+}
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: scale(0.4) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
   }
 }

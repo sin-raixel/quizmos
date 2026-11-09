@@ -1,10 +1,8 @@
-import { cleanAttempts } from "./stats";
-import type { Attempt } from "./stats";
 import type { Question } from "./types";
 
 // Saved reviewers live in this browser (localStorage). Only the generated questions are kept,
 // not the uploaded file or your notes, so each reviewer takes just a few KB.
-export type Saved = { id: string; title: string; createdAt: number; items: Question[]; attempts?: Attempt[] };
+export type Saved = { id: string; title: string; createdAt: number; items: Question[] };
 
 const KEY = "reviewer-maker-history-v1";
 export const MAX_SAVED = 30;
@@ -26,14 +24,11 @@ function valid(x: unknown): x is Saved {
   );
 }
 
-// Keep a reviewer even if its quiz history is damaged; just drop the bad attempts.
-const tidy = (s: Saved): Saved => (s.attempts === undefined ? s : { ...s, attempts: cleanAttempts(s.attempts) });
-
 export function loadHistory(): Saved[] {
   try {
     const raw = localStorage.getItem(KEY);
     const data: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(data) ? data.filter(valid).map(tidy) : [];
+    return Array.isArray(data) ? data.filter(valid) : [];
   } catch {
     return [];
   }
@@ -67,7 +62,7 @@ export function parseBackup(text: string): Saved[] {
     throw new Error("That isn’t a Quizmos backup.");
   }
   if (!Array.isArray(data)) throw new Error("That isn’t a Quizmos backup.");
-  const good = data.filter(valid).map(tidy);
+  const good = data.filter(valid);
   if (good.length === 0) throw new Error("No reviewers were found in that file.");
   return good;
 }

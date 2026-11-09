@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { ATTEMPT_MS, MAX_CHARS, MODELS, clampCount, isTimeout, outputTokens, promptFor } from "../../../lib/ai";
+import { MAX_CHARS, MODELS, clampCount, isTimeout, outputTokens, promptFor } from "../../../lib/ai";
 
 // The owner's Gemini key lives ONLY here, as an environment variable. It is never sent to the browser.
 //   GEMINI_API_KEY        required: your key from aistudio.google.com/apikey
@@ -9,7 +9,7 @@ import { ATTEMPT_MS, MAX_CHARS, MODELS, clampCount, isTimeout, outputTokens, pro
 //                         optional but recommended on Vercel: makes the limits reliable
 
 export const runtime = "nodejs";
-export const maxDuration = 60; // all model attempts together must fit in this (3 models x ATTEMPT_MS)
+export const maxDuration = 60; // all model attempts together must fit in this
 
 const LIMIT = Number(process.env.RATE_LIMIT_PER_DAY) || 10;
 const MAX_BAD_CODES = 5; // wrong access codes allowed per address per hour
@@ -70,9 +70,15 @@ async function counter(bucket: string, ip: string, op: "INCR" | "DECR" | "GET", 
 
 type Outcome = { answer: string } | { error: string; status: number };
 
+const TOTAL_MS = 55_000; // all attempts together, safely inside maxDuration
+const FIRST_MS = 35_000; // a big set can take a while, so one model may use most of the time
+
 async function askGemini(notes: string, count: number): Promise<Outcome> {
+  const deadline = Date.now() + TOTAL_MS;
   let problem = "";
   for (const model of MODELS) {
+    const left = deadline - Date.now();
+    if (left < 8000) break; // not enough time left for another try
     let res: Response;
     try {
       res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -82,12 +88,12 @@ async function askGemini(notes: string, count: number): Promise<Outcome> {
           contents: [{ parts: [{ text: promptFor(count) + notes }] }],
           generationConfig: { responseMimeType: "application/json", temperature: 0.4, maxOutputTokens: outputTokens(count) },
         }),
-        signal: AbortSignal.timeout(ATTEMPT_MS), // a slow model must not use up the whole time limit
+        signal: AbortSignal.timeout(Math.min(left, FIRST_MS)),
       });
     } catch (error) {
       if (isTimeout(error)) {
-        problem = "The AI took too long to answer. Try again in a moment.";
-        continue; // try the next model
+        problem = "The AI took too long to answer. Try a smaller number of questions, or try again in a moment.";
+        continue; // try the next model if there is time left
       }
       return { error: "The server couldn’t reach Google. Try again in a moment.", status: 502 };
     }

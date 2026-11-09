@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import type { Saved } from "../lib/history";
-import { summarize } from "../lib/stats";
 import { card, ghostBtn } from "./ui";
 
 const when = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -80,14 +79,18 @@ export default function History({
           {entries.map((e) => {
             const active = e.id === activeId;
             const ai = e.items.some((q) => q.kind === "ai");
-            const sum = summarize(e.attempts);
             return (
               <li
                 key={e.id}
                 className={`spot group relative overflow-hidden rounded-xl border px-4 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent hover:shadow-glow ${active ? "border-accent bg-accent/10" : "border-line bg-ink/40"}`}
               >
-                <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 origin-top bg-accent transition-transform duration-300 ${active ? "scale-y-100" : "scale-y-0 group-hover:scale-y-100"}`} />
-                <p className="truncate font-semibold text-bright">{e.title}</p>
+                <span aria-hidden="true" className={`comet absolute inset-x-0 bottom-0 h-[3px] origin-left transition-transform duration-500 ease-out ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`} />
+                <p className="truncate font-semibold text-bright transition-colors group-hover:text-white">
+                  <span aria-hidden="true" className={`mr-2 inline-block transition-all duration-300 group-hover:rotate-90 group-hover:scale-125 group-hover:text-accent ${active ? "text-accent" : "text-accent/50"}`}>
+                    ✦
+                  </span>
+                  {e.title}
+                </p>
                 <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                   <span>
                     {when(e.createdAt)}, {e.items.length} questions
@@ -95,11 +98,6 @@ export default function History({
                   {ai && <span className="chip">AI</span>}
                   {active && <span className="chip">Open now</span>}
                 </p>
-                {sum && (
-                  <p className="mt-1 text-sm">
-                    Best <b className="text-bright">{sum.best}%</b>, avg {sum.average}%, {sum.attempts} {sum.attempts === 1 ? "attempt" : "attempts"}
-                  </p>
-                )}
                 <div className="mt-3 flex items-center gap-2">
                   {confirming === e.id ? (
                     <>

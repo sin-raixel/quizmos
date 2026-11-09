@@ -8,7 +8,6 @@ export type Question = {
   answer: number; // index of the correct option (first correct one for multi; unused for enum)
   answers?: number[]; // multi: indexes of every correct option
   items?: string[]; // enum: the answers; alternatives for one answer are separated by "|"
-  topic?: string; // AI mode: short subject label, used to group progress stats
   why: string; // the sentence from the notes this came from
   front: string; // flashcard front
   back: string; // flashcard back

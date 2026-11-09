@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { MAX_CHARS, MAX_QUESTIONS, MIN_QUESTIONS, clampCount, generateWithAI, generateWithServer } from "../lib/ai";
+import { AiError, MAX_CHARS, MAX_QUESTIONS, MIN_QUESTIONS, clampCount, generateWithAI, generateWithServer } from "../lib/ai";
 import { buildQuestions } from "../lib/generate";
 import { readFile } from "../lib/read-file";
 import type { Question } from "../lib/types";
@@ -87,6 +87,10 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
           onReady(items, title);
         } catch (error) {
           const reason = error instanceof Error ? error.message : "Something went wrong.";
+          if (error instanceof AiError && error.fatal) {
+            setStatus({ msg: reason, error: true }); // wrong code or key: show it, don't hide it behind the free method
+            return;
+          }
           const fallback = buildQuestions(content, count);
           if (fallback.items.length === 0) {
             setStatus({ msg: reason, error: true });

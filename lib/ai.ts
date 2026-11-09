@@ -9,7 +9,19 @@ import type { Question } from "./types";
 export const MODELS = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash-lite"];
 export const MAX_CHARS = 30000; // keeps requests small enough for free-tier limits
 
-export const ATTEMPT_MS = 18000; // longest we wait on one model; 3 models x 18s fits the server's 60s limit
+// How long we wait on one model. Bigger sets take longer to write, so this grows with the count
+// (25 questions: 40 seconds). The server uses its own overall deadline instead (see the API route).
+export const attemptMs = (count: number) => 20000 + clampCount(count) * 800;
+
+// An error the visitor has to fix themselves (wrong access code, bad key). The page shows it
+// instead of quietly switching to the free method, which would hide the problem.
+export class AiError extends Error {
+  fatal: boolean;
+  constructor(message: string, fatal = false) {
+    super(message);
+    this.fatal = fatal;
+  }
+}
 export const isTimeout = (error: unknown) => error instanceof DOMException && error.name === "TimeoutError";
 
 export const MIN_QUESTIONS = 1;
@@ -42,17 +54,16 @@ Rules:
 - Never write "according to the notes" in a question.
 - "explanation" is one or two sentences on why the answer is right, based on the notes.
 - "cardFront" and "cardBack" make a short flashcard for the same idea.
-- "topic" is a label of one to three words for the subject area (for example "Cell structure"). Reuse the exact same label for related questions and use at most 6 different labels in total.
 - mcq: exactly 4 options and only one is correct. Wrong options must be believable, on the same topic, and similar in length.
 - tf: "question" is a single statement. About half should be false. A false statement should change one fact from the notes in a believable way, not be absurd. The explanation gives the correct fact.
 - multi: 5 options, with 2 or 3 correct. "question" ends with "Select all that apply."
 - enum: "question" asks for a specific number of items, for example "List the three types of ...". "answers" has that many short answers (1 to 4 words each). If an answer has an accepted alternative or abbreviation, join them with "|", for example "Carbon dioxide|CO2".
 
 Return ONLY a JSON array. Use these shapes:
-{"type":"mcq","question":"...","options":["...","...","...","..."],"answerIndex":0,"explanation":"...","topic":"...","cardFront":"...","cardBack":"..."}
-{"type":"tf","question":"...","answer":true,"explanation":"...","topic":"...","cardFront":"...","cardBack":"..."}
-{"type":"multi","question":"...","options":["...","...","...","...","..."],"answerIndexes":[0,2],"explanation":"...","topic":"...","cardFront":"...","cardBack":"..."}
-{"type":"enum","question":"...","answers":["...","...","..."],"explanation":"...","topic":"...","cardFront":"...","cardBack":"..."}
+{"type":"mcq","question":"...","options":["...","...","...","..."],"answerIndex":0,"explanation":"...","cardFront":"...","cardBack":"..."}
+{"type":"tf","question":"...","answer":true,"explanation":"...","cardFront":"...","cardBack":"..."}
+{"type":"multi","question":"...","options":["...","...","...","...","..."],"answerIndexes":[0,2],"explanation":"...","cardFront":"...","cardBack":"..."}
+{"type":"enum","question":"...","answers":["...","...","..."],"explanation":"...","cardFront":"...","cardBack":"..."}
 
 NOTES:
 `;
@@ -67,7 +78,6 @@ type Raw = {
   answer?: unknown;
   answers?: unknown;
   explanation?: unknown;
-  topic?: unknown;
   cardFront?: unknown;
   cardBack?: unknown;
 };
@@ -141,7 +151,6 @@ export function parse(raw: string): Question[] {
     const item: Question = { kind: "ai", q: r.question.trim(), why, front: "", back: "", ...shape };
     const correct = answerText(item);
     const prefix = shape.format === "tf" ? "True or false: " : "";
-    if (typeof r.topic === "string" && r.topic.trim()) item.topic = r.topic.trim().slice(0, 40);
     item.front = typeof r.cardFront === "string" && r.cardFront ? r.cardFront : prefix + item.q;
     item.back = typeof r.cardBack === "string" && r.cardBack ? r.cardBack : `${correct}\n\n${why}`.trim();
     out.push(item);
@@ -164,7 +173,7 @@ export async function generateWithAI(notes: string, apiKey: string, count = 25):
           contents: [{ parts: [{ text: promptFor(clampCount(count)) + text }] }],
           generationConfig: { responseMimeType: "application/json", temperature: 0.4, maxOutputTokens: outputTokens(clampCount(count)) },
         }),
-        signal: AbortSignal.timeout(ATTEMPT_MS),
+        signal: AbortSignal.timeout(attemptMs(count)),
       });
     } catch (error) {
       if (isTimeout(error)) {
@@ -186,8 +195,8 @@ export async function generateWithAI(notes: string, apiKey: string, count = 25):
     const body = await res.json().catch(() => null);
     if (!res.ok) {
       const message: string = body?.error?.message ?? "";
-      if (res.status === 400 && /api key/i.test(message)) throw new Error("That API key isn’t valid. Check that you copied all of it.");
-      if (res.status === 403) throw new Error("Google refused that key. It may not have access to the Gemini API.");
+      if (res.status === 400 && /api key/i.test(message)) throw new AiError("That API key isn’t valid. Check that you copied all of it.", true);
+      if (res.status === 403) throw new AiError("Google refused that key. It may not have access to the Gemini API.", true);
       throw new Error(message || `Google returned an error (${res.status}).`);
     }
 
@@ -227,7 +236,11 @@ export async function generateWithServer(notes: string, code: string, count = 25
     throw new Error("Couldn’t reach the server. Check your internet connection.");
   }
   const body = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(body?.error ?? `The server returned an error (${res.status}).`);
+  if (!res.ok) {
+    const message: string = body?.error ?? `The server returned an error (${res.status}).`;
+    // A wrong or blocked access code needs fixing, so don't hide it behind the free method.
+    throw new AiError(message, res.status === 401 || (res.status === 429 && /wrong access codes/i.test(message)));
+  }
   if (typeof body?.answer !== "string" || !body.answer) throw new Error("The AI returned an empty answer.");
   return parse(body.answer);
 }

@@ -92,14 +92,3 @@ describe("limits and prompt", () => {
     expect(promptFor(1)).toContain("Write 1 question that tests");
   });
 });
-
-describe("topic labels", () => {
-  const base = { type: "tf", question: "Water boils at 100C at sea level.", answer: true, explanation: "x" };
-  it("keeps a topic and trims it", () => {
-    expect(parse(JSON.stringify([{ ...base, topic: "  Phase changes " }]))[0].topic).toBe("Phase changes");
-  });
-  it("leaves topic off when it is missing or blank", () => {
-    expect(parse(JSON.stringify([base]))[0].topic).toBeUndefined();
-    expect(parse(JSON.stringify([{ ...base, topic: "  " }]))[0].topic).toBeUndefined();
-  });
-});

@@ -33,6 +33,33 @@ export default function Cosmos() {
     [],
   );
 
+  // Individually twinkling stars and a few sparkles. Same seeded random, so server and browser agree.
+  const { twinklers, sparkles } = useMemo(() => {
+    const next = rng(77);
+    const colors = ["#ffffff", "#ffffff", "#c4b5fd", "#bae6fd", "#f5d0fe"];
+    const twinklers = Array.from({ length: 60 }, () => {
+      const size = 1.5 + next() * 2.5;
+      const color = colors[Math.floor(next() * colors.length)];
+      return {
+        left: `${(next() * 100).toFixed(2)}%`,
+        top: `${(next() * 100).toFixed(2)}%`,
+        size: size.toFixed(1),
+        color,
+        glow: size > 3 ? `0 0 ${(size * 3).toFixed(1)}px ${(size / 2).toFixed(1)}px ${color}` : undefined,
+        duration: `${(2.2 + next() * 4).toFixed(2)}s`,
+        delay: `${(-next() * 6).toFixed(2)}s`,
+      };
+    });
+    const sparkles = Array.from({ length: 8 }, () => ({
+      left: `${(next() * 100).toFixed(2)}%`,
+      top: `${(next() * 100).toFixed(2)}%`,
+      size: (10 + next() * 10).toFixed(1),
+      duration: `${(3 + next() * 3.5).toFixed(2)}s`,
+      delay: `${(-next() * 6).toFixed(2)}s`,
+    }));
+    return { twinklers, sparkles };
+  }, []);
+
   useEffect(() => {
     const root = document.documentElement;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -75,6 +102,18 @@ export default function Cosmos() {
           <div className="star-layer" style={{ width: l.size, height: l.size, boxShadow: l.shadow, animationDuration: l.twinkle }} />
         </div>
       ))}
+      <div className="parallax" style={{ "--depth": 8 } as CSSProperties}>
+        {twinklers.map((s, i) => (
+          <span
+            key={i}
+            className="twinkler"
+            style={{ left: s.left, top: s.top, width: `${s.size}px`, height: `${s.size}px`, background: s.color, boxShadow: s.glow, animationDuration: s.duration, animationDelay: s.delay }}
+          />
+        ))}
+        {sparkles.map((s, i) => (
+          <span key={i} className="sparkle" style={{ left: s.left, top: s.top, width: `${s.size}px`, height: `${s.size}px`, animationDuration: s.duration, animationDelay: s.delay }} />
+        ))}
+      </div>
       <span className="shooting-star" />
     </div>
   );

@@ -9,20 +9,16 @@ import History from "../components/history";
 import Logo from "../components/logo";
 import PrintSheet from "../components/print-sheet";
 import Quiz from "../components/quiz";
-import Stats from "../components/stats";
 import UploadCard from "../components/upload-card";
 import { card } from "../components/ui";
 import { MAX_SAVED, downloadBackup, loadHistory, newId, parseBackup, saveHistory } from "../lib/history";
 import type { Saved } from "../lib/history";
-import { addAttempt } from "../lib/stats";
-import type { Attempt } from "../lib/stats";
 import type { Question } from "../lib/types";
 
 const MODES = [
   { id: "quiz", label: "Quiz" },
   { id: "flash", label: "Flashcards" },
-  { id: "stats", label: "Stats" },
-  { id: "edit", label: "Edit" },
+  { id: "edit", label: "Edit questions" },
 ] as const;
 
 export default function Home() {
@@ -31,7 +27,6 @@ export default function Home() {
   const [mode, setMode] = useState<(typeof MODES)[number]["id"]>("quiz");
   const ai = useAiSettings();
   const studyRef = useRef<HTMLElement>(null);
-  const [practice, setPractice] = useState<Question[] | null>(null); // a custom set (most-missed) to quiz on instead of every question
   const [session, setSession] = useState(0); // changes whenever a different reviewer is opened, so the quiz restarts
   const [history, setHistory] = useState<Saved[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -51,7 +46,6 @@ export default function Home() {
     setItems(next);
     setSession((n) => n + 1);
     setStarted(true);
-    setPractice(null);
     setMode("quiz");
     requestAnimationFrame(() => studyRef.current?.scrollIntoView({ behavior: "smooth" }));
   }
@@ -77,25 +71,6 @@ export default function Home() {
     if (activeId) persist(history.map((h) => (h.id === activeId && next.length > 0 ? { ...h, items: next } : h)));
   }
 
-  // A finished quiz run is saved onto the reviewer that is open.
-  function record(attempt: Attempt) {
-    if (activeId) persist(history.map((h) => (h.id === activeId ? { ...h, attempts: addAttempt(h.attempts, attempt) } : h)));
-  }
-
-  function startPractice(list: Question[]) {
-    setPractice(list);
-    setSession((n) => n + 1);
-    setMode("quiz");
-  }
-
-  function pickMode(next: (typeof MODES)[number]["id"]) {
-    if (next === "quiz" && mode !== "quiz") {
-      setPractice(null); // coming back to Quiz from another tab means the whole reviewer
-      setSession((n) => n + 1);
-    }
-    setMode(next);
-  }
-
   function remove(id: string) {
     persist(history.filter((h) => h.id !== id));
     if (id === activeId) setActiveId(null);
@@ -114,7 +89,6 @@ export default function Home() {
   }
 
   const modeIndex = MODES.findIndex((m) => m.id === mode);
-  const activeEntry = history.find((h) => h.id === activeId);
   const activeTitle = history.find((h) => h.id === activeId)?.title ?? "Quizmos reviewer";
 
   return (
@@ -151,10 +125,10 @@ export default function Home() {
           <>
           <section ref={studyRef} className={`${card} mt-6 scroll-mt-24`} aria-label="Study">
             <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-              <div role="group" aria-label="Study mode" className="relative grid w-full max-w-xl grid-cols-4 rounded-full border border-line bg-ink/60 p-1">
+              <div role="group" aria-label="Study mode" className="relative grid w-full max-w-md grid-cols-3 rounded-full border border-line bg-ink/60 p-1">
                 <span
                   aria-hidden="true"
-                  className="absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/4)] rounded-full bg-accent-strong shadow-glow transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  className="absolute inset-y-1 left-1 w-[calc((100%-0.5rem)/3)] rounded-full bg-accent-strong shadow-glow transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
                   style={{ transform: `translateX(${modeIndex * 100}%)` }}
                 />
                 {MODES.map((m) => (
@@ -162,7 +136,7 @@ export default function Home() {
                     key={m.id}
                     type="button"
                     aria-pressed={mode === m.id}
-                    onClick={() => pickMode(m.id)}
+                    onClick={() => setMode(m.id)}
                     className={`relative z-10 cursor-pointer rounded-full px-3 py-2 text-sm font-medium transition-colors duration-300 ${mode === m.id ? "text-white" : "text-bright/80 hover:text-white"}`}
                   >
                     {m.label}
@@ -179,9 +153,7 @@ export default function Home() {
               {items.length === 0 ? (
                 <p>No questions left. Upload more notes to make new ones.</p>
               ) : mode === "quiz" ? (
-                <Quiz key={session} items={practice ?? items} total={items.length} onFinish={record} />
-              ) : mode === "stats" ? (
-                <Stats entry={activeEntry} items={items} onPractice={startPractice} />
+                <Quiz key={session} items={items} />
               ) : mode === "flash" ? (
                 <Flashcards key={session} items={items} />
               ) : (
