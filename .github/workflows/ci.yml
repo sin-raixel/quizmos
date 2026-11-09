@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Informational for now. Once `npm run lint` is clean on your machine, delete the next line.
+      - run: npm run lint
+        continue-on-error: true
+      - run: npm test
+      # `next build` also type-checks the whole project.
+      - run: npm run build

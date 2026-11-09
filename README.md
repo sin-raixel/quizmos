@@ -12,6 +12,7 @@ Turn your notes into a study reviewer. Upload a PDF, Word, PowerPoint, or text f
 - AI mode adds true or false, select-all-that-apply, and enumeration (type the list from memory) questions
 - Flashcards that flip in 3D; shuffle and step through (arrow keys work)
 - Choose how many questions: 5, 10, 25, or a custom amount from 1 to 50
+- **Progress stats:** every finished quiz is recorded per reviewer. The Stats tab shows attempts, best, average and last score, a score-over-time chart, your most-missed questions (with a "Practice these" button), and accuracy by question type. In AI mode, questions also get a topic label, so you see accuracy by topic too. The History panel shows best score and attempt count for each reviewer
 - Edit mode to remove questions that came out wrong
 - Export: print or save as a PDF (questions, then an answer key), or download the flashcards for Anki or Quizlet
 - History: every reviewer you make is saved in your browser (questions only, not your file), so you can reopen it later. Back up / Restore moves them to another device
@@ -61,14 +62,23 @@ Never prefix these variables with `NEXT_PUBLIC_` and never commit them. Everyone
 
 - Works best on structured notes with clear definitions; flowing paragraphs give weaker questions.
 - Scanned PDFs (images of pages) can't be read without OCR.
+- Stats are kept with each reviewer in the browser, so they follow the same rules as History (per device, use Back up to keep them). The last 30 attempts per reviewer are kept. Best, average and the chart count only full runs; retries and practice runs still feed the most-missed list and the accuracy bars. Free-method questions have no topic, so topic stats need AI mode.
 - History is stored in the browser (localStorage), so it is per device and browser, and clearing site data erases it. Use Back up to keep a copy. Real accounts would need a database.
+
+## Tests
+
+```bash
+npm test
+```
+
+The tests cover the logic that is easy to break without noticing: question generation (`lib/generate.ts`), checking the AI's answer (`parse` in `lib/ai.ts`), enumeration grading, progress stats, backup validation, and the Anki/Quizlet export. A GitHub Action (`.github/workflows/ci.yml`) runs lint, the tests, and a full build on every push and pull request.
 
 ## Project structure
 
 ```
 app/          page, layout, and the /api/generate server route
 components/   upload card, AI key menu, history, quiz, flashcards, question editor
-lib/          file reading and question generation
+lib/          file reading, question generation, and progress stats (stats.ts)
 ```
 
 ## Run it locally

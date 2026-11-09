@@ -42,16 +42,17 @@ Rules:
 - Never write "according to the notes" in a question.
 - "explanation" is one or two sentences on why the answer is right, based on the notes.
 - "cardFront" and "cardBack" make a short flashcard for the same idea.
+- "topic" is a label of one to three words for the subject area (for example "Cell structure"). Reuse the exact same label for related questions and use at most 6 different labels in total.
 - mcq: exactly 4 options and only one is correct. Wrong options must be believable, on the same topic, and similar in length.
 - tf: "question" is a single statement. About half should be false. A false statement should change one fact from the notes in a believable way, not be absurd. The explanation gives the correct fact.
 - multi: 5 options, with 2 or 3 correct. "question" ends with "Select all that apply."
 - enum: "question" asks for a specific number of items, for example "List the three types of ...". "answers" has that many short answers (1 to 4 words each). If an answer has an accepted alternative or abbreviation, join them with "|", for example "Carbon dioxide|CO2".
 
 Return ONLY a JSON array. Use these shapes:
-{"type":"mcq","question":"...","options":["...","...","...","..."],"answerIndex":0,"explanation":"...","cardFront":"...","cardBack":"..."}
-{"type":"tf","question":"...","answer":true,"explanation":"...","cardFront":"...","cardBack":"..."}
-{"type":"multi","question":"...","options":["...","...","...","...","..."],"answerIndexes":[0,2],"explanation":"...","cardFront":"...","cardBack":"..."}
-{"type":"enum","question":"...","answers":["...","...","..."],"explanation":"...","cardFront":"...","cardBack":"..."}
+{"type":"mcq","question":"...","options":["...","...","...","..."],"answerIndex":0,"explanation":"...","topic":"...","cardFront":"...","cardBack":"..."}
+{"type":"tf","question":"...","answer":true,"explanation":"...","topic":"...","cardFront":"...","cardBack":"..."}
+{"type":"multi","question":"...","options":["...","...","...","...","..."],"answerIndexes":[0,2],"explanation":"...","topic":"...","cardFront":"...","cardBack":"..."}
+{"type":"enum","question":"...","answers":["...","...","..."],"explanation":"...","topic":"...","cardFront":"...","cardBack":"..."}
 
 NOTES:
 `;
@@ -66,6 +67,7 @@ type Raw = {
   answer?: unknown;
   answers?: unknown;
   explanation?: unknown;
+  topic?: unknown;
   cardFront?: unknown;
   cardBack?: unknown;
 };
@@ -124,7 +126,7 @@ function shapeOf(r: Raw): Shape | null {
   return { format: "mcq", options: shuffled, answer: shuffled.indexOf(correct) };
 }
 
-function parse(raw: string): Question[] {
+export function parse(raw: string): Question[] {
   const json = raw.replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
   const data: unknown = JSON.parse(json);
   if (!Array.isArray(data)) throw new Error("The AI didn’t return a list of questions. Try again.");
@@ -139,6 +141,7 @@ function parse(raw: string): Question[] {
     const item: Question = { kind: "ai", q: r.question.trim(), why, front: "", back: "", ...shape };
     const correct = answerText(item);
     const prefix = shape.format === "tf" ? "True or false: " : "";
+    if (typeof r.topic === "string" && r.topic.trim()) item.topic = r.topic.trim().slice(0, 40);
     item.front = typeof r.cardFront === "string" && r.cardFront ? r.cardFront : prefix + item.q;
     item.back = typeof r.cardBack === "string" && r.cardBack ? r.cardBack : `${correct}\n\n${why}`.trim();
     out.push(item);

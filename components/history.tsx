@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { Saved } from "../lib/history";
+import { summarize } from "../lib/stats";
 import { card, ghostBtn } from "./ui";
 
 const when = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -79,6 +80,7 @@ export default function History({
           {entries.map((e) => {
             const active = e.id === activeId;
             const ai = e.items.some((q) => q.kind === "ai");
+            const sum = summarize(e.attempts);
             return (
               <li
                 key={e.id}
@@ -93,6 +95,11 @@ export default function History({
                   {ai && <span className="chip">AI</span>}
                   {active && <span className="chip">Open now</span>}
                 </p>
+                {sum && (
+                  <p className="mt-1 text-sm">
+                    Best <b className="text-bright">{sum.best}%</b>, avg {sum.average}%, {sum.attempts} {sum.attempts === 1 ? "attempt" : "attempts"}
+                  </p>
+                )}
                 <div className="mt-3 flex items-center gap-2">
                   {confirming === e.id ? (
                     <>

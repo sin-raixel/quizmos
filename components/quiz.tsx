@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gradeEnum } from "../lib/grade";
+import { makeAttempt } from "../lib/stats";
+import type { Attempt } from "../lib/stats";
 import { FORMAT_LABEL, answerText, formatOf } from "../lib/types";
 import type { Question } from "../lib/types";
 import { eyebrow, ghostBtn, primaryBtn } from "./ui";
@@ -242,7 +244,8 @@ function Ring({ ratio }: { ratio: number }) {
   );
 }
 
-export default function Quiz({ items }: { items: Question[] }) {
+// total: how many questions the whole reviewer has, so a short run (retry or practice) isn't counted as a full attempt.
+export default function Quiz({ items, total, onFinish }: { items: Question[]; total: number; onFinish?: (attempt: Attempt) => void }) {
   const [order, setOrder] = useState(items);
   const [round, setRound] = useState(0); // changes on every restart so each question starts fresh
   const [index, setIndex] = useState(0);
@@ -305,6 +308,8 @@ export default function Quiz({ items }: { items: Question[] }) {
     setAnswered(true);
     if (correct) setScore((s) => s + 1);
     else setMissed((m) => [...m, q]);
+    // The last answer ends the run, so record it now while every result is known.
+    if (index + 1 >= order.length) onFinish?.(makeAttempt(order, correct ? missed : [...missed, q], total));
   }
 
   return (
