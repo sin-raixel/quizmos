@@ -1,6 +1,6 @@
 # Quizmos
 
-Turn your notes into a study reviewer. Upload a PDF, Word, PowerPoint, or text file (or paste your notes) and get a quiz and flashcards, all generated in your browser.
+Turn your notes into a study reviewer. Upload a PDF, Word, PowerPoint, or text file (or paste your notes) and get a quiz and flashcards, generated in your browser (with optional AI for smarter questions).
 
 **Live demo:** _add your Vercel link here_
 
@@ -13,18 +13,20 @@ Turn your notes into a study reviewer. Upload a PDF, Word, PowerPoint, or text f
 - Flashcards that flip in 3D; shuffle and step through (arrow keys work)
 - Choose how many questions: 5, 10, 25, or a custom amount from 1 to 50
 - Edit mode to remove questions that came out wrong
+- Export: print or save as a PDF (questions, then an answer key), or download the flashcards for Anki or Quizlet
 - History: every reviewer you make is saved in your browser (questions only, not your file), so you can reopen it later. Back up / Restore moves them to another device
 - Private by default: files are read on your device and never uploaded (unless you turn on AI)
 - Optional AI mode: shared access code from the site owner, or your own free Gemini API key, for better, teacher-style questions
 
 ## How it works
 
-There is no AI and no API key. Questions come from plain pattern matching (`lib/generate.ts`):
+By default everything runs in your browser and no AI is involved. Questions come from pattern matching (`lib/generate.ts`):
 
-1. **Definitions:** sentences shaped like "X is …", "X refers to …", or "Term: explanation" become term-and-definition questions.
-2. **Fill in the blank:** frequently repeated keywords are blanked out of sentences, with other keywords from the same notes as the wrong choices.
+1. **Definitions:** lines shaped like "X is …", "X refers to …", "Term: meaning", or "Term - meaning" become term-and-definition questions. Slide headings (like "Causes"), exercises, formulas, bullet lists, and cut-off lines are filtered out.
+2. **Wrong answers come from the same notes:** other terms or other definitions from your lesson, so the choices look like they belong together.
+3. **Fill in the blank:** a defined term that shows up in another sentence is blanked out. For ordinary paragraphs, a name or number is blanked instead, with other names or numbers from the notes as the choices.
 
-Text is pulled out of files in `lib/read-file.ts` using pdf.js, mammoth, and JSZip, which are loaded from cdnjs only when needed.
+Text is pulled out of files in `lib/read-file.ts` using pdf.js, mammoth, and JSZip, which are loaded from cdnjs only when needed. Optional AI mode (below) is the only part that sends anything off your device.
 
 ## Optional AI mode
 
@@ -46,6 +48,14 @@ If an AI request fails, the app falls back to the free method. Model names are l
 3. Redeploy. The access-code box appears automatically once both `GEMINI_API_KEY` and `ACCESS_CODE` are set.
 
 Never prefix these variables with `NEXT_PUBLIC_` and never commit them. Everyone shares one free-tier quota, so many people at once can hit Google's rate limits; the app then falls back to the free method. On Gemini's free tier, Google may use inputs to improve its products; a paid key avoids that.
+
+### Abuse protection
+
+- **Access code guessing:** after 5 wrong codes in an hour, that IP address is blocked until the hour is up. The right code is refused too while blocked.
+- **Daily limit:** each person gets `RATE_LIMIT_PER_DAY` AI reviewers. A request that fails (Google is down, a model times out) gives its slot back.
+- **Timeouts:** each Gemini attempt gets 18 seconds before the next model is tried, so all three models fit inside the server's 60-second limit.
+- People on the same network (a school, for example) share one IP address, so they share these limits.
+- Both counters use Upstash when it's configured, and an in-memory fallback otherwise.
 
 ## Limitations
 
@@ -72,4 +82,4 @@ Then open http://localhost:3000.
 
 ## Built with
 
-Next.js, TypeScript, Tailwind CSS. Space theme: a CSS starfield with cursor parallax (`components/cosmos.tsx`), cursor-following light on hover (`.spot` in `app/globals.css`), and Space Grotesk via `next/font`.
+Next.js, TypeScript, Tailwind CSS. Space theme: a CSS starfield with cursor parallax (`components/cosmos.tsx`), cursor-following light on hover (`.spot` in `app/globals.css`), and Poppins via `next/font`.

@@ -9,6 +9,9 @@ import type { Question } from "./types";
 export const MODELS = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-2.5-flash-lite"];
 export const MAX_CHARS = 30000; // keeps requests small enough for free-tier limits
 
+export const ATTEMPT_MS = 18000; // longest we wait on one model; 3 models x 18s fits the server's 60s limit
+export const isTimeout = (error: unknown) => error instanceof DOMException && error.name === "TimeoutError";
+
 export const MIN_QUESTIONS = 1;
 export const MAX_QUESTIONS = 50;
 export const clampCount = (n: number) => Math.min(MAX_QUESTIONS, Math.max(MIN_QUESTIONS, Math.round(n) || 25));
@@ -158,8 +161,13 @@ export async function generateWithAI(notes: string, apiKey: string, count = 25):
           contents: [{ parts: [{ text: promptFor(clampCount(count)) + text }] }],
           generationConfig: { responseMimeType: "application/json", temperature: 0.4, maxOutputTokens: outputTokens(clampCount(count)) },
         }),
+        signal: AbortSignal.timeout(ATTEMPT_MS),
       });
-    } catch {
+    } catch (error) {
+      if (isTimeout(error)) {
+        problem = "The AI took too long to answer. Try again in a moment.";
+        continue; // try the next model
+      }
       throw new Error("Couldn’t reach Google. Check your internet connection.");
     }
 
@@ -209,8 +217,10 @@ export async function generateWithServer(notes: string, code: string, count = 25
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notes: notes.slice(0, MAX_CHARS), code, count: clampCount(count) }),
+      signal: AbortSignal.timeout(65000), // just over the server's own 60s limit
     });
-  } catch {
+  } catch (error) {
+    if (isTimeout(error)) throw new Error("The server took too long. Try again, or use the free method.");
     throw new Error("Couldn’t reach the server. Check your internet connection.");
   }
   const body = await res.json().catch(() => null);

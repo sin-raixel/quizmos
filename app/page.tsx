@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { AiMenu, useAiSettings } from "../components/ai-settings";
 import Editor from "../components/editor";
+import ExportMenu from "../components/export-menu";
 import Flashcards from "../components/flashcards";
 import History from "../components/history";
 import Logo from "../components/logo";
+import PrintSheet from "../components/print-sheet";
 import Quiz from "../components/quiz";
 import UploadCard from "../components/upload-card";
 import { card } from "../components/ui";
@@ -87,6 +89,7 @@ export default function Home() {
   }
 
   const modeIndex = MODES.findIndex((m) => m.id === mode);
+  const activeTitle = history.find((h) => h.id === activeId)?.title ?? "Quizmos reviewer";
 
   return (
     <>
@@ -119,6 +122,7 @@ export default function Home() {
         </div>
 
         {started && (
+          <>
           <section ref={studyRef} className={`${card} mt-6 scroll-mt-24`} aria-label="Study">
             <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
               <div role="group" aria-label="Study mode" className="relative grid w-full max-w-md grid-cols-3 rounded-full border border-line bg-ink/60 p-1">
@@ -139,7 +143,10 @@ export default function Home() {
                   </button>
                 ))}
               </div>
-              <p className="text-sm">{items.length} questions</p>
+              <div className="flex items-center gap-4">
+                <p className="text-sm">{items.length} questions</p>
+                <ExportMenu items={items} title={activeTitle} />
+              </div>
             </div>
 
             <div className="mx-auto max-w-3xl">
@@ -154,6 +161,8 @@ export default function Home() {
               )}
             </div>
           </section>
+          <PrintSheet items={items} title={activeTitle} />
+          </>
         )}
       </main>
     </>

@@ -537,3 +537,29 @@ body {
 .logo:hover .logo-spark {
   transform: rotate(180deg) scale(1.4);
 }
+
+/* Printing: the page shows only the printable question sheet (components/print-sheet.tsx). */
+.print-sheet {
+  display: none;
+}
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+  body > *:not(main) {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  main > *:not(.print-sheet) {
+    display: none !important;
+  }
+  .print-sheet {
+    display: block;
+    color: #000;
+    font-family: system-ui, sans-serif;
+  }
+}
