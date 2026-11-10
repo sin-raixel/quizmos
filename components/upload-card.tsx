@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { AiError, MAX_CHARS, MAX_QUESTIONS, MIN_QUESTIONS, clampCount, generateWithAI, generateWithServer } from "../lib/ai";
+import { MAX_CHARS, MAX_QUESTIONS, MIN_QUESTIONS, clampCount, generateWithAI, generateWithServer } from "../lib/ai";
 import { buildQuestions } from "../lib/generate";
 import { readFile } from "../lib/read-file";
 import type { Question } from "../lib/types";
@@ -45,7 +45,7 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
 
   async function generate() {
     // Name for the saved reviewer: the file name, or the start of the pasted notes.
-    const firstLine = text.trim().split("\n")[0].slice(0, 40).trim();
+    const firstLine = text.trim().split("\n")[0].replace(/^#+\s*/, "").slice(0, 40).trim();
     const title = file ? file.name.replace(/\.[^.]+$/, "") : firstLine || "Pasted notes";
     setBusy(true);
     setStatus({ msg: "Reading…" });
@@ -87,10 +87,6 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
           onReady(items, title);
         } catch (error) {
           const reason = error instanceof Error ? error.message : "Something went wrong.";
-          if (error instanceof AiError && error.fatal) {
-            setStatus({ msg: reason, error: true }); // wrong code or key: show it, don't hide it behind the free method
-            return;
-          }
           const fallback = buildQuestions(content, count);
           if (fallback.items.length === 0) {
             setStatus({ msg: reason, error: true });
@@ -116,7 +112,7 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
         return;
       }
       setStatus({
-        msg: `Read ${result.words.toLocaleString("en-US")} words, found ${result.defs} definitions, made ${result.items.length} questions${result.items.length < count ? ` (you asked for ${count}, but your notes only had enough for ${result.items.length})` : ""}.`,
+        msg: `Read ${result.words.toLocaleString("en-US")} words, found ${result.defs} definitions${result.sections > 1 ? ` in ${result.sections} sections` : ""}, made ${result.items.length} questions${result.items.length < count ? ` (you asked for ${count}, but your notes only had enough for ${result.items.length})` : ""}.`,
       });
       onReady(result.items, title);
     } catch (error) {

@@ -35,3 +35,21 @@ High latency makes video calls feel slow, even when the bandwidth of the connect
 Every device on a network needs a unique IP address so that packets reach the right destination.
 A protocol such as HTTP defines how the browser and the web server talk to each other.
 `;
+
+// Notes with headings: two sections that talk about different things.
+export const SECTIONED_NOTES = `# Networking Hardware
+
+A router is a device that forwards data packets between different networks.
+A switch is a device that connects devices within the same network and forwards data using MAC addresses.
+A firewall is a security system that monitors and filters network traffic based on rules.
+A modem is a device that converts digital data into signals that travel over phone or cable lines.
+The router then forwards each packet toward the web server through several networks.
+
+# Network Protocols
+
+HTTP is a protocol that web browsers use to request pages from web servers.
+DNS: translates domain names such as example.com into IP addresses that computers can use.
+DHCP: automatically assigns IP addresses to devices when they join a network.
+FTP is a protocol that transfers files between a client and a server over a network.
+A protocol such as HTTP defines how the browser and the web server talk to each other.
+`;
