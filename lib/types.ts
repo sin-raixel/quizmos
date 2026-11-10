@@ -11,6 +11,7 @@ export type Question = {
   why: string; // the sentence from the notes this came from
   front: string; // flashcard front
   back: string; // flashcard back
+  topic?: string; // optional label used to group questions in the stats
 };
 
 export const formatOf = (q: Question): Format => q.format ?? "mcq";
