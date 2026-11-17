@@ -16,6 +16,12 @@
 html {
   background: var(--color-ink);
   color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: rgb(124 58 237 / 0.55);
+  color: #fff;
 }
 
 body {
@@ -236,6 +242,10 @@ body {
 
   .chip {
     display: inline-block;
+    transition:
+      border-color 0.2s,
+      background-color 0.2s,
+      transform 0.2s;
     border-radius: 9999px;
     border: 1px solid rgb(125 211 252 / 0.35);
     background: rgb(125 211 252 / 0.08);
@@ -243,6 +253,17 @@ body {
     font-size: 0.75rem;
     font-weight: 500;
     color: var(--color-nova);
+  }
+  .chip:hover {
+    border-color: rgb(125 211 252 / 0.7);
+    background: rgb(125 211 252 / 0.16);
+    transform: translateY(-1px);
+  }
+
+  /* soft glowing divider used above the footer */
+  .glow-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(167 139 250 / 0.6), transparent);
   }
 
   /* progress bar: a comet with a glowing head */
@@ -469,6 +490,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
