@@ -105,7 +105,7 @@ export default function Home() {
 
       <main className="mx-auto max-w-7xl px-5 pt-12 pb-24 sm:px-8 lg:px-10 lg:pt-16">
         <div className="grid items-end gap-6 lg:grid-cols-12 lg:gap-10">
-          <h1 className="hero text-5xl leading-[1.05] font-bold tracking-tight sm:text-6xl lg:col-span-8 lg:text-7xl">
+          <h1 className="hero text-5xl leading-[1.05] font-bold tracking-tight text-balance sm:text-6xl lg:col-span-8 lg:text-7xl">
             <span className="block text-bright">Turn your notes</span>
             <span className="outline-text block">into a reviewer.</span>
           </h1>
@@ -164,6 +164,11 @@ export default function Home() {
           <PrintSheet items={items} title={activeTitle} />
           </>
         )}
+
+        <footer className="mt-20">
+          <div className="glow-line" />
+          <p className="pt-6 text-center text-sm text-body/70">Free mode runs entirely in your browser.</p>
+        </footer>
       </main>
     </>
   );
