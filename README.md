@@ -15,6 +15,7 @@ Turn your notes into a study reviewer. Upload a PDF, Word, PowerPoint, or text f
 - Edit mode to remove questions that came out wrong
 - Export: print or save as a PDF (questions, then an answer key), or download the flashcards for Anki or Quizlet
 - History: every reviewer you make is saved in your browser (questions only, not your file), so you can reopen it later. Back up / Restore moves them to another device
+- Light and dark theme: a button in the top bar switches between them, remembers your choice, and follows your device setting the first time
 - Private by default: files are read on your device and never uploaded (unless you turn on AI)
 - Optional AI mode: shared access code from the site owner, or your own free Gemini API key, for better, teacher-style questions
 
