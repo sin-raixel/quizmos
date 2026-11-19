@@ -8,6 +8,7 @@ import Flashcards from "../components/flashcards";
 import History from "../components/history";
 import Logo from "../components/logo";
 import PrintSheet from "../components/print-sheet";
+import ThemeToggle from "../components/theme-toggle";
 import Quiz from "../components/quiz";
 import UploadCard from "../components/upload-card";
 import { card } from "../components/ui";
@@ -99,7 +100,10 @@ export default function Home() {
             <Logo className="size-11" />
             <span className="text-xl font-semibold tracking-tight text-bright">Quizmos</span>
           </div>
-          <AiMenu ai={ai} />
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <AiMenu ai={ai} />
+          </div>
         </div>
       </header>
 
@@ -137,7 +141,7 @@ export default function Home() {
                     type="button"
                     aria-pressed={mode === m.id}
                     onClick={() => setMode(m.id)}
-                    className={`relative z-10 cursor-pointer rounded-full px-3 py-2 text-sm font-medium transition-colors duration-300 ${mode === m.id ? "text-white" : "text-bright/80 hover:text-white"}`}
+                    className={`relative z-10 cursor-pointer rounded-full px-3 py-2 text-sm font-medium transition-colors duration-300 ${mode === m.id ? "text-white" : "text-bright/80 hover:text-peak"}`}
                   >
                     {m.label}
                   </button>
