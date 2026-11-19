@@ -140,7 +140,7 @@ export function AiMenu({ ai }: { ai: AiSettings }) {
               onClick={() => ai.setUseAi(!ai.useAi)}
               className={`relative mt-0.5 h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ${ai.useAi ? "border-accent bg-accent-strong shadow-glow" : "border-line bg-ink"}`}
             >
-              <span className={`absolute top-0.5 left-0.5 size-4.5 rounded-full bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${ai.useAi ? "translate-x-5" : ""}`} />
+              <span className={`absolute top-0.5 left-0.5 size-4.5 rounded-full bg-white shadow-sm ring-1 ring-line transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${ai.useAi ? "translate-x-5" : ""}`} />
             </button>
           </div>
 
