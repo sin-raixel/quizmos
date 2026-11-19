@@ -10,9 +10,9 @@ export default function Logo({ className = "size-10" }: { className?: string }) 
           <stop offset="1" stopColor="#4c1d95" />
         </radialGradient>
         <linearGradient id="qz-ring" x1="3" y1="32" x2="61" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#7dd3fc" />
-          <stop offset="0.5" stopColor="#a78bfa" />
-          <stop offset="1" stopColor="#7dd3fc" />
+          <stop offset="0" style={{ stopColor: "var(--logo-ring-a, #7dd3fc)" }} />
+          <stop offset="0.5" style={{ stopColor: "var(--logo-ring-b, #a78bfa)" }} />
+          <stop offset="1" style={{ stopColor: "var(--logo-ring-a, #7dd3fc)" }} />
         </linearGradient>
       </defs>
       <path transform="rotate(-24 32 32)" d="M3.5 32A28.5 8.5 0 0 1 60.5 32" stroke="url(#qz-ring)" strokeWidth="3.4" strokeLinecap="round" />
@@ -22,7 +22,7 @@ export default function Logo({ className = "size-10" }: { className?: string }) 
         <circle cx="32.1" cy="40.4" r="2.1" fill="#fff" stroke="none" />
       </g>
       <path transform="rotate(-24 32 32)" d="M3.5 32A28.5 8.5 0 0 0 60.5 32" stroke="url(#qz-ring)" strokeWidth="3.4" strokeLinecap="round" />
-      <path className="logo-spark" d="M11 5.5l1.6 4.4 4.4 1.6-4.4 1.6L11 17.5l-1.6-4.4L5 11.5l4.4-1.6z" fill="#fff" />
+      <path className="logo-spark" d="M11 5.5l1.6 4.4 4.4 1.6-4.4 1.6L11 17.5l-1.6-4.4L5 11.5l4.4-1.6z" style={{ fill: "var(--logo-spark, #fff)" }} />
     </svg>
   );
 }
