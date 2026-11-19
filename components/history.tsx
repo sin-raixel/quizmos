@@ -85,7 +85,7 @@ export default function History({
                 className={`spot group relative overflow-hidden rounded-xl border px-4 py-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent hover:shadow-glow ${active ? "border-accent bg-accent/10" : "border-line bg-ink/40"}`}
               >
                 <span aria-hidden="true" className={`comet absolute inset-x-0 bottom-0 h-[3px] origin-left transition-transform duration-500 ease-out ${active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`} />
-                <p className="truncate font-semibold text-bright transition-colors group-hover:text-white">
+                <p className="truncate font-semibold text-bright transition-colors group-hover:text-peak">
                   <span aria-hidden="true" className={`mr-2 inline-block transition-all duration-300 group-hover:rotate-90 group-hover:scale-125 group-hover:text-accent ${active ? "text-accent" : "text-accent/50"}`}>
                     ✦
                   </span>

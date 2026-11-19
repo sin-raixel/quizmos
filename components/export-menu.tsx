@@ -5,7 +5,7 @@ import { download, fileName, toAnki, toQuizlet } from "../lib/export";
 import type { Question } from "../lib/types";
 
 const row =
-  "block w-full cursor-pointer rounded-lg px-3 py-2 text-left text-sm text-bright transition-colors hover:bg-accent/10 hover:text-white";
+  "block w-full cursor-pointer rounded-lg px-3 py-2 text-left text-sm text-bright transition-colors hover:bg-accent/10 hover:text-peak";
 
 export default function ExportMenu({ items, title }: { items: Question[]; title: string }) {
   const ref = useRef<HTMLDetailsElement>(null);

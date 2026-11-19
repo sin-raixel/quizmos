@@ -235,7 +235,7 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
                 setCustom(false);
                 setAmount(n);
               }}
-              className={`relative z-10 cursor-pointer rounded-full py-2 text-sm font-medium tabular-nums transition-colors duration-300 ${!custom && count === n ? "text-white" : "text-bright/80 hover:text-white"}`}
+              className={`relative z-10 cursor-pointer rounded-full py-2 text-sm font-medium tabular-nums transition-colors duration-300 ${!custom && count === n ? "text-white" : "text-bright/80 hover:text-peak"}`}
             >
               {n}
             </button>
@@ -244,7 +244,7 @@ export default function UploadCard({ onReady, ai }: { onReady: (items: Question[
             type="button"
             aria-pressed={custom}
             onClick={() => setCustom(true)}
-            className={`relative z-10 cursor-pointer rounded-full py-2 text-sm font-medium transition-colors duration-300 ${custom ? "text-white" : "text-bright/80 hover:text-white"}`}
+            className={`relative z-10 cursor-pointer rounded-full py-2 text-sm font-medium transition-colors duration-300 ${custom ? "text-white" : "text-bright/80 hover:text-peak"}`}
           >
             Custom
           </button>
